@@ -53,32 +53,36 @@ class Block
   std::unique_ptr<Block> next{};
 };
 
-template <class T>
-class MemPool;
+template <class BaseT>
+class MemPoolBase
+{
+ public:
+  virtual void Release(BaseT * ptr) = 0;
+};
 
-template <class T>
+template <class BaseT>
 struct ItemDeleter
 {
-  ItemDeleter(MemPool<T> * home)
+  ItemDeleter(MemPoolBase<BaseT> * home)
       : home(home)
   {}
 
-  void operator()(T * ptr)
+  void operator()(BaseT * ptr)
   {
     home->Release(ptr);
   }
 
-  MemPool<T> * home;
+  MemPoolBase<BaseT> * home;
 };
   
   
-template <class T>
-class MemPool
+template <class T, class BaseT = T>
+class MemPool : public MemPoolBase<BaseT>
 {
  public:
   using BlockType = Block<T>;
   using ItemType = Item<T>;
-  using ReturnType = std::unique_ptr<T, ItemDeleter<T>>;
+  using ReturnType = std::unique_ptr<BaseT, ItemDeleter<BaseT>>;
   
   MemPool(int blockSize)
       : block(std::make_unique<Block<T>>(blockSize))
@@ -99,12 +103,13 @@ class MemPool
     auto const tp = &ptr->data;
     new (tp) T{std::forward<Args>(args)...};
     assert((std::size_t)tp % CACHE_ALIGNMENT == 0);
-    return ReturnType{tp, ItemDeleter<T>{this}};
+    return ReturnType{tp, ItemDeleter<BaseT>{this}};
   }
 
-  void Release(T * ptr)
+  void Release(BaseT * basePtr) override
   {
     TRACE_METHOD();
+    auto ptr = reinterpret_cast<T*>(basePtr);
     if (!std::is_trivially_destructible_v<T>)
       ptr->~T();
 

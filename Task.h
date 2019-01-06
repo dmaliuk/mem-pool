@@ -22,4 +22,12 @@ private:
   std::size_t sleepT;
 };
 
-  
+class TaskB : public Task
+{
+public:
+  TaskB(std::size_t){}
+
+  ~TaskB() = default;
+
+  void Run() override {}
+};
