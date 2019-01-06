@@ -1,9 +1,7 @@
 CC=g++
-LINK_TARGET=main.exe
-OBJS=main.o
+SOURCES=test.cpp Task.cpp
+HEADERS=Pool.h Task.h
 
-test: test.cpp Pool.h
-	$(CC) -O3 -std=c++17 -o test test.cpp
 
-clean:
-	rm main.o main.exe
+test: $(HEADERS) $(SOURCES)
+	$(CC) -O3 -std=c++17 -o test $(SOURCES)

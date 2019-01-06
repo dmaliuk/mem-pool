@@ -27,6 +27,9 @@ int main()
   run(1);
   run(2);
   run(3);
+run(10);
+
   
   return 0;
+
 }
